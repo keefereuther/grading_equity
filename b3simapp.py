@@ -7,7 +7,7 @@ from scipy.stats import ttest_ind
 from scipy.stats import median_abs_deviation
 
 # Load the gradebook data
-gradebook = pd.read_csv('BILD3_deid_rmNA_prop_min_FAKE.csv')
+gradebook = pd.read_csv('FAKE_EXAMPLE_DATA.csv')
 
 # Define the assignment groups
 assignment_groups = {
