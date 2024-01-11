@@ -36,7 +36,7 @@ def calculate_final_grade(gradebook, assignment_groups, weightings, dropped_scor
     # Initialize a DataFrame to store the final grades
     final_grades = pd.DataFrame()
     final_grades["ID"] = gradebook["ID"]
-    final_grades["minoritized"] = gradebook["Minoritized"]
+    final_grades["demographic_group"] = gradebook["demographic_group"]
 
     # Initialize a Series to store the total weights (for normalization)
     total_weights = pd.Series(0, index=gradebook.index)
@@ -59,7 +59,7 @@ def calculate_final_grade(gradebook, assignment_groups, weightings, dropped_scor
         total_weights += weightings[group]
 
     # Normalize the final grades by the total weights
-    final_grades["Final_Grade"] = final_grades.drop(columns=["ID", "minoritized"]).sum(axis=1) / total_weights
+    final_grades["Final_Grade"] = final_grades.drop(columns=["ID", "demographic_group"]).sum(axis=1) / total_weights
 
     return final_grades
 
@@ -70,29 +70,29 @@ final_grades = calculate_final_grade(gradebook, assignment_groups, weightings, d
 # st.write(final_grades.head())
 
 # Calculate summary statistics for each group
-summary_statistics = final_grades.groupby("minoritized")["Final_Grade"].describe()
+summary_statistics = final_grades.groupby("demographic_group")["Final_Grade"].describe()
 
 # Calculate the median for each group
-minority_median = final_grades[final_grades["minoritized"] == True]["Final_Grade"].median()
-non_minority_median = final_grades[final_grades["minoritized"] == False]["Final_Grade"].median()
+demo1_median = final_grades[final_grades["demographic_group"] == True]["Final_Grade"].median()
+non_demo1_median = final_grades[final_grades["demographic_group"] == False]["Final_Grade"].median()
 
 # Calculate the difference between the medians
-median_difference = minority_median - non_minority_median
+median_difference = demo1_median - non_demo1_median
 
 # Convert to percentage and round to 2 decimal places
-minority_median = round(minority_median * 100, 2)
-non_minority_median = round(non_minority_median * 100, 2)
+demo1_median = round(demo1_median * 100, 2)
+non_demo1_median = round(non_demo1_median * 100, 2)
 median_difference = round(median_difference * 100, 2)
 
 # Display the medians
 st.markdown(f"<p style='font-size:28px;'>This data is FAKE and only for the purpose of demonstrating the app.</p>", unsafe_allow_html=True)
-st.markdown(f"<p style='font-size:20px;'>Racially Minoritized and/or First-Gen Students' Median: {minority_median}%</p>", unsafe_allow_html=True)
-st.markdown(f"<p style='font-size:20px;'>Non-minoritized and not First-Gen Students' Median: {non_minority_median}%</p>", unsafe_allow_html=True)
+st.markdown(f"<p style='font-size:20px;'>Demographic Group 1 Median Grade: {demo1_median}%</p>", unsafe_allow_html=True)
+st.markdown(f"<p style='font-size:20px;'>Demographic Group 2 Median Grade: {non_demo1_median}%</p>", unsafe_allow_html=True)
 st.markdown(f"<p style='font-size:20px;'>Median Difference: {median_difference}%</p>", unsafe_allow_html=True)
 
 # Plot histograms of final grades for each group
-plt.hist(final_grades.loc[final_grades["minoritized"] == False, "Final_Grade"], bins=50, histtype='step', label='Non-minoritized and not First-Gen Students', color='blue')
-plt.hist(final_grades.loc[final_grades["minoritized"] == True, "Final_Grade"], bins=50, histtype='step', label='Racially Minoritized and/or First-Gen Students', color='orange')
+plt.hist(final_grades.loc[final_grades["demographic_group"] == False, "Final_Grade"], bins=50, histtype='step', label='Demographic Group 2', color='blue')
+plt.hist(final_grades.loc[final_grades["demographic_group"] == True, "Final_Grade"], bins=50, histtype='step', label='Demographic Group 1', color='orange')
 
 # Add labels and legend
 plt.xlabel('Final Grade')
@@ -104,22 +104,22 @@ st.pyplot(plt)
 
 
 # Calculate MAD for each group
-minority_mad = median_abs_deviation(final_grades.loc[final_grades["minoritized"] == True, "Final_Grade"])
-non_minority_mad = median_abs_deviation(final_grades.loc[final_grades["minoritized"] == False, "Final_Grade"])
+demo1_mad = median_abs_deviation(final_grades.loc[final_grades["demographic_group"] == True, "Final_Grade"])
+non_demo1_mad = median_abs_deviation(final_grades.loc[final_grades["demographic_group"] == False, "Final_Grade"])
 
-st.write('Racially Minoritized MAD: ', minority_mad)
-st.write('Racially Non-Minoritized MAD: ', non_minority_mad)
+st.write('Demographic Group 1 MAD: ', demo1_mad)
+st.write('Demographic Group 2 MAD: ', non_demo1_mad)
 
 # Display the summary statistics
 st.write(summary_statistics)
 
 # Conduct t-test
-t_stat, p_value = ttest_ind(final_grades[final_grades["minoritized"] == True]["Final_Grade"], 
-                            final_grades[final_grades["minoritized"] == False]["Final_Grade"], 
+t_stat, p_value = ttest_ind(final_grades[final_grades["demographic_group"] == True]["Final_Grade"], 
+                            final_grades[final_grades["demographic_group"] == False]["Final_Grade"], 
                             equal_var=False, nan_policy='omit')
 st.write(f"P-value (t-test): {p_value}")
 
 # Calculate Glass's Delta
-non_minority_std = final_grades.loc[final_grades["minoritized"] == False, "Final_Grade"].std()
-glass_delta = (final_grades.loc[final_grades["minoritized"] == True, "Final_Grade"].mean() - final_grades.loc[final_grades["minoritized"] == False, "Final_Grade"].mean()) / non_minority_std
+non_demo1_std = final_grades.loc[final_grades["demographic_group"] == False, "Final_Grade"].std()
+glass_delta = (final_grades.loc[final_grades["demographic_group"] == True, "Final_Grade"].mean() - final_grades.loc[final_grades["demographic_group"] == False, "Final_Grade"].mean()) / non_demo1_std
 st.write('Glass Delta: ', glass_delta)
